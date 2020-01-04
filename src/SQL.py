@@ -1,0 +1,2 @@
+class SQLConnector:
+    pass
