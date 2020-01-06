@@ -2,6 +2,9 @@
 
 **pSQL** is a very simple & easy to use python library as it contains all the simple functions to communicate between your scripts & your SQL server.
 
+> **File SQL.py in /src represents the library , containing all the needed functions**
+> **mysql.connector is required for this library**
+
 > **Note** : There is a permission system to prevent certain actions if you do not want them to occure.
 > by default , all actions are locked , you need to use a SQLPermissions preset or set one up manualy as explained below ↓
 
