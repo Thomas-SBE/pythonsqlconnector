@@ -1,4 +1,4 @@
-from src.SQL import SQLConnection, SQLDatabase
+from src.SQL import SQLConnection, SQLDatabase, SQLPermissions
 
 # ---------------------------------
 #       CONFIGURATION
@@ -10,16 +10,29 @@ config = {
     "password": ""
 }
 
+perms = SQLPermissions().preset(SQLPermissions.READ_ONLY)
+
 # ---------------------------------
 #      CONNECTING TO SERVER
 #          & DATABASE
 # ---------------------------------
 
-connection = SQLConnection(debug=True).CONNECT(config)
+connection = SQLConnection(debug=True, custom_permissions=perms).CONNECT(config)
 database = connection.DB_CONNECT("memoryleak")
 
+# ---------------------------------
+#      SERVER & DATABASE
+#         MANAGEMENT
+# ---------------------------------
 
-print(database.SHOW_COLUMNS("users"))
-print(database.SELECT_ALL("users", ref="mail"))
-print(database.SELECT_WHERE("users", "uid", "1"))
-database.INSERT("users", {"uid": "new", "mail": "None"})
+connection.CREATE_DATABASE("abcd")
+connection.DROP_DATABASE("abcd")
+
+database.CREATE_TABLE("abc", ("uid", "uideux"))
+database.DROP_TABLE("abc")
+
+database.SELECT_WHERE("users", "uid", "1")
+database.SELECT_ALL("users")
+database.UPDATE("users", {"uid": "1"}, {"uid": "abc"})
+database.DELETE("users", {"uid": "abc"})
+database.INSERT("users", {"uid": "1234"})
