@@ -227,17 +227,3 @@ class SQLDatabase:
         self.cursor.execute("DROP TABLE IF EXISTS " + str(table_name))
         SQLActionResult("DROP TABLE", self.mastername, affected)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
