@@ -68,16 +68,17 @@ class SQLDatabase:
                 final[x] = _temp
         return final
 
-    def INSERT(self, table, keys, values):
-        print(str(tuple(keys)).replace("'", "`"))
+    def INSERT(self, table, keyvalues):
+        keys = [k for k,v in keyvalues.items()]
+        values = [v for k,v in keyvalues.items()]
         self.cursor.execute("INSERT INTO `" + str(table) + "`" + str(tuple(keys)).replace("'", "`") + " VALUES " + str(tuple(values)) + "")
-        self.datab.commit()
+        self.db.commit()
 
-    def UPDATE(self, table, keys, values, ref_key, ref_value):
-        if len(keys) != len(values): print("ERROR"); return
-        strtemp = ""
-        for x in range(len(keys)):
-            strtemp += "`"+str(keys[x])+'`="'+str(values[x])+'",'
-        print("UPDATE `" +str(table)+ "` SET " +strtemp[:-1]+ " WHERE `" + str(ref_key) + '`="' + str(ref_value) + '"')
-        self.cursor.execute("UPDATE `" +str(table)+ "` SET " +strtemp[:-1]+ " WHERE `" + str(ref_key) + '`="' + str(ref_value) + '"')
-        self.datab.commit()
+    def UPDATE(self, table, keyvalues, references):
+        strtemp, reftemp = "", ""
+        for k,v in keyvalues.items():
+            strtemp += "`"+str(k)+'`="'+str(v)+'",'
+        for k,v in references.items():
+            reftemp += "`" + str(k) + '`="' + str(v) + '" &&'
+        self.cursor.execute("UPDATE `" +str(table)+ "` SET " +strtemp[:-1]+ " WHERE " + reftemp[:-2])
+        self.db.commit()
