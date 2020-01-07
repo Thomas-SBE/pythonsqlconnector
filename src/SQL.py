@@ -20,14 +20,14 @@ def warn(s):
 # ----------------------------------
 
 class SQLPermissionNotGranted:
-    def __init__(self, accessed, perm):
-        print("{} [ {} ] - You cannot do this as the permission {} does not allow it !".format(err("-"), err("pSQL → " + accessed), warn(perm)))
+    def __init__(self, accessed, perm, debugmode):
+        if debugmode: print("{} [ {} ] - You cannot do this as the permission {} does not allow it !".format(err("-"), err("pSQL → " + accessed), warn(perm)))
 class SQLActionResult:
-    def __init__(self, action, table, amount):
-        print("{} [ {} ] - {} affected {} of {}.".format(succ("+"), succ("pSQL → " + action), action, warn(amount), warn(table)))
+    def __init__(self, action, table, amount, debugmode):
+        if debugmode: print("{} [ {} ] - {} affected {} of {}.".format(succ("+"), succ("pSQL → " + action), action, warn(amount), warn(table)))
 class SQLAlreadyExist:
-    def __init__(self, typ, action, name):
-        print("{} [ {} ] - Cannot {} {} because the name {} already exists !".format(err("-"), err("pSQL → " + action + typ), warn(action), warn(typ), warn(name)))
+    def __init__(self, typ, action, name, debugmode):
+        if debugmode: print("{} [ {} ] - Cannot {} {} because the name {} already exists !".format(err("-"), err("pSQL → " + action + typ), warn(action), warn(typ), warn(name)))
 
 
 # ----------------------------------
@@ -112,21 +112,21 @@ class SQLConnection:
         return _db
 
     def CREATE_DATABASE(self, db_name):
-        if not self.permissions.CreateDatabasePermission: SQLPermissionNotGranted("CREATE DATABASE", "CreateDatabasePermission");return
+        if not self.permissions.CreateDatabasePermission: SQLPermissionNotGranted("CREATE DATABASE", "CreateDatabasePermission", self.debugmode);return
         if db_name in self.GET_DATABASES(): SQLAlreadyExist("DATABASE", "CREATE", db_name);return
         self.db_cursor.execute("CREATE DATABASE " + str(db_name))
-        SQLActionResult("CREATE DATABASE", db_name, 1)
+        SQLActionResult("CREATE DATABASE", db_name, 1, self.debugmode)
 
     def GET_DATABASES(self):
         self.db_cursor.execute("SHOW DATABASES")
         return [x[0] for x in self.db_cursor]
 
     def DROP_DATABASE(self, db_name):
-        if not self.permissions.DropDatabasePermission: SQLPermissionNotGranted("DROP DATABASE", "DropDatabasePermission");return
+        if not self.permissions.DropDatabasePermission: SQLPermissionNotGranted("DROP DATABASE", "DropDatabasePermission", self.debugmode);return
         affected = 0
         if db_name in self.GET_DATABASES(): affected = 1
         self.db_cursor.execute("DROP DATABASE IF EXISTS " + str(db_name))
-        SQLActionResult("DROP DATABASE", db_name, affected)
+        SQLActionResult("DROP DATABASE", db_name, affected, self.debugmode)
 
 class SQLDatabase:
     def __init__(self, master):
@@ -146,7 +146,7 @@ class SQLDatabase:
         return tuple(final)
 
     def SELECT_WHERE(self, table, key, value):
-        if not self.master.permissions.SelectPermission: SQLPermissionNotGranted("SELECT", "SelectPermission");return
+        if not self.master.permissions.SelectPermission: SQLPermissionNotGranted("SELECT", "SelectPermission", self.master.debugmode);return
         self.cursor.execute("SELECT * FROM `" + str(table) + "` WHERE " + str(key) + "='" + str(value) +"'")
         ret = self.cursor.fetchall()
         if len(ret) <= 0: return {}
@@ -154,11 +154,11 @@ class SQLDatabase:
         final = {}
         for x in range(len(ret[0])):
             final[columns[x]] = ret[0][x]
-        SQLActionResult("SELECT", str(table), len(ret))
+        SQLActionResult("SELECT", str(table), len(ret), self.master.debugmode)
         return final
 
     def SELECT_ALL(self, table, ref = None):
-        if not self.master.permissions.SelectPermission: SQLPermissionNotGranted("SELECT", "SelectPermission");return
+        if not self.master.permissions.SelectPermission: SQLPermissionNotGranted("SELECT", "SelectPermission", self.master.debugmode);return
         self.cursor.execute("SELECT * FROM `" + str(table) + "` WHERE 1")
         res = self.cursor.fetchall()
         columns = self.SHOW_COLUMNS(table)
@@ -175,21 +175,21 @@ class SQLDatabase:
                 final[res[x][refindex]] = _temp
             else:
                 final[x] = _temp
-        SQLActionResult("SELECT", str(table), len(res))
+        SQLActionResult("SELECT", str(table), len(res), self.master.debugmode)
         return final
 
     def INSERT(self, table, keyvalues):
-        if not self.master.permissions.InsertPermission: SQLPermissionNotGranted("INSERT", "InsertPermission");return
+        if not self.master.permissions.InsertPermission: SQLPermissionNotGranted("INSERT", "InsertPermission", self.master.debugmode);return
         keys, values = "(", "("
         for k,v in keyvalues.items():
             keys += "`"+str(k)+"`,"
             values += '"'+str(v)+'",'
         self.cursor.execute("INSERT INTO `" + str(table) + "`" + keys[:-1] + ")" + " VALUES " + values[:-1] + ")" + "")
         self.db.commit()
-        SQLActionResult("INSERT", str(table), self.cursor.rowcount)
+        SQLActionResult("INSERT", str(table), self.cursor.rowcount, self.master.debugmode)
 
     def UPDATE(self, table, keyvalues, references):
-        if not self.master.permissions.UpdatePermission: SQLPermissionNotGranted("UPDATE", "UpdatePermission");return
+        if not self.master.permissions.UpdatePermission: SQLPermissionNotGranted("UPDATE", "UpdatePermission", self.master.debugmode);return
         strtemp, reftemp = "", ""
         for k,v in keyvalues.items():
             strtemp += "`"+str(k)+'`="'+str(v)+'",'
@@ -197,33 +197,34 @@ class SQLDatabase:
             reftemp += "`" + str(k) + '`="' + str(v) + '" &&'
         self.cursor.execute("UPDATE `" +str(table)+ "` SET " +strtemp[:-1]+ " WHERE " + reftemp[:-2])
         self.db.commit()
-        SQLActionResult("UPDATE", str(table), self.cursor.rowcount)
+        SQLActionResult("UPDATE", str(table), self.cursor.rowcount, self.master.debugmode)
 
     def DELETE(self, table, references):
-        if not self.master.permissions.DeletePermission: SQLPermissionNotGranted("DELETE", "DeletePermission");return
+        if not self.master.permissions.DeletePermission: SQLPermissionNotGranted("DELETE", "DeletePermission", self.master.debugmode);return
         reftemp = ""
         for k,v in references.items():
             reftemp += "`" + str(k) + '`="' + str(v) + '" &&'
         self.cursor.execute("DELETE FROM `" +str(table)+ "` WHERE " + reftemp[:-2])
         self.db.commit()
+        SQLActionResult("DELETE", str(table), self.cursor.rowcount, self.master.debugmode)
 
     def CREATE_TABLE(self, table_name, columns):
-        if not self.master.permissions.CreateTablePermission: SQLPermissionNotGranted("CREATE TABLE", "CreateTablePermission");return
-        if table_name in self.GET_TABLES(): SQLAlreadyExist("TABLE", "CREATE", table_name);return
+        if not self.master.permissions.CreateTablePermission: SQLPermissionNotGranted("CREATE TABLE", "CreateTablePermission", self.master.debugmode);return
+        if table_name in self.GET_TABLES(): SQLAlreadyExist("TABLE", "CREATE", table_name, self.master.debugmode);return
         formatd = "("
         for v in columns:
             formatd += str(v) + " TEXT,"
         self.cursor.execute("CREATE TABLE " + str(table_name) + formatd[:-1] + ")")
-        SQLActionResult("CREATE TABLE", self.mastername, 1)
+        SQLActionResult("CREATE TABLE", self.mastername, 1, self.master.debugmode)
 
     def GET_TABLES(self):
         self.cursor.execute("SHOW TABLES")
         return [x[0] for x in self.cursor]
 
     def DROP_TABLE(self, table_name):
-        if not self.master.permissions.DropTablePermission: SQLPermissionNotGranted("DROP TABLE", "DropTablePermission");return
+        if not self.master.permissions.DropTablePermission: SQLPermissionNotGranted("DROP TABLE", "DropTablePermission", self.master.debugmode);return
         affected = 0
         if table_name in self.GET_TABLES(): affected = 1
         self.cursor.execute("DROP TABLE IF EXISTS " + str(table_name))
-        SQLActionResult("DROP TABLE", self.mastername, affected)
+        SQLActionResult("DROP TABLE", self.mastername, affected, self.master.debugmode)
 
