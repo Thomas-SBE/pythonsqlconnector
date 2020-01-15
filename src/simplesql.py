@@ -1,3 +1,10 @@
+"""
+    SimpleSQL Connections & Database Management
+
+    Full-Documentation on : https://github.com/Thomas-SBE/pythonsqlconnector
+
+"""
+
 
 import mysql.connector
 import colorama
@@ -96,6 +103,7 @@ class SQLConnection:
         colorama.init()
         self.config = { "host": None, "username": None, "password": None }
         self.permissions = SQLPermissions()
+        self.permissions.preset(SQLPermissions.ALL_ACCESSES)
         if custom_permissions != None and type(custom_permissions) is type(SQLPermissions()): self.permissions = custom_permissions
 
     def CONNECT(self, config):

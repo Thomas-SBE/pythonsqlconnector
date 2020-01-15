@@ -2,25 +2,6 @@
 
 **simpleSQL** is a very simple & easy to use python library as it contains all the simple functions to communicate between your python scripts & your SQL server.
 
-# Installation
-
-You can either install through PyPi , use the setup.py in install or use the source code in /src
-
-**PyPi**
-
-	python -m pip install simplesql
-
-**setup**
-
-Open terminal in cloned repo folder and launch:
-
-	python install/setup.py install
-
-**source**
-
-Import the simplesql.py file in your projects.
-
-
 # Current Functionalities
 
  - Create Database
@@ -48,7 +29,7 @@ From this *Connection* you create **DatabaseConnections** to connect to specific
 
 ### The Basic Code would be :
 
-	from simplesql import SQLConnection, SQLDatabase
+	from pSQL import SQLConnection, SQLDatabase
 
 	config = {
 		"host": "<your host address>",
@@ -61,7 +42,7 @@ From this *Connection* you create **DatabaseConnections** to connect to specific
 
 -------------------------
 
-`from simplesql import SQLConnection, SQLDatabase`  
+`from pSQL import SQLConnection, SQLDatabase`  
 **↑** This imports the library to be used
 
 `config = { "host": "<your host address>", "username": "<your database username>", "password": "<your user password>"}`  
@@ -95,7 +76,7 @@ By default all permissions are allowed , but changing it to a preset or setting 
 
 **To manage permissions you need to import `SQLPermissions` class .**
 
-	from simplesql import SQLConnection, SQLDatabase, SQLPermissions
+	from pSQL import SQLConnection, SQLDatabase, SQLPermissions
 
 Then you can either create a custom made SQLPermission, by tweaking the booleans inside the class, or use a preset.
 

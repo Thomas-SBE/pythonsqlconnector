@@ -1,4 +1,4 @@
-from src.SQL import SQLConnection, SQLDatabase, SQLPermissions
+from simplesql import SQLConnection, SQLDatabase, SQLPermissions
 
 # ---------------------------------
 #       CONFIGURATION

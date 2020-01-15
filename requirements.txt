@@ -1,2 +1,0 @@
-mysql-connector==2.2.9
-colorama==0.4.3
